@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Nuovo Task - Taskboard{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-plus me-2"></i>Nuovo Task
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">
+                            <i class="fas fa-heading me-2"></i>Titolo *
+                        </label>
+                        <input type="text" class="form-control" id="title" name="title" 
+                               placeholder="Inserisci il titolo del task" required minlength="3" maxlength="100">
+                        <div class="form-text">Minimo 3 caratteri, massimo 100</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="description" class="form-label">
+                            <i class="fas fa-align-left me-2"></i>Descrizione
+                        </label>
+                        <textarea class="form-control" id="description" name="description" rows="4" 
+                                  placeholder="Descrizione dettagliata del task (opzionale)" maxlength="500"></textarea>
+                        <div class="form-text">Massimo 500 caratteri</div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Annulla
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Crea Task
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+// Contatore caratteri per la descrizione
+document.getElementById('description').addEventListener('input', function() {
+    const maxLength = 500;
+    const currentLength = this.value.length;
+    const remaining = maxLength - currentLength;
+    
+    let formText = this.nextElementSibling;
+    formText.textContent = `${remaining} caratteri rimanenti`;
+    
+    if (remaining < 50) {
+        formText.className = 'form-text text-warning';
+    } else {
+        formText.className = 'form-text';
+    }
+});
+
+// Contatore caratteri per il titolo
+document.getElementById('title').addEventListener('input', function() {
+    const maxLength = 100;
+    const currentLength = this.value.length;
+    const remaining = maxLength - currentLength;
+    
+    let formText = this.nextElementSibling;
+    formText.textContent = `${remaining} caratteri rimanenti (minimo 3)`;
+    
+    if (remaining < 10) {
+        formText.className = 'form-text text-warning';
+    } else {
+        formText.className = 'form-text';
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

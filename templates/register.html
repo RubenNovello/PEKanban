@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Registrazione - Taskboard{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <i class="fas fa-user-plus fa-3x text-primary mb-3"></i>
+                    <h2 class="card-title">Registrazione</h2>
+                    <p class="text-muted">Crea il tuo account</p>
+                </div>
+
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">
+                            <i class="fas fa-user me-2"></i>Username
+                        </label>
+                        <input type="text" class="form-control" id="username" name="username" 
+                               placeholder="Scegli un username (min 3 caratteri)" required minlength="3">
+                        <div class="form-text">Minimo 3 caratteri</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label">
+                            <i class="fas fa-lock me-2"></i>Password
+                        </label>
+                        <input type="password" class="form-control" id="password" name="password" 
+                               placeholder="Scegli una password (min 4 caratteri)" required minlength="4">
+                        <div class="form-text">Minimo 4 caratteri</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="password_confirm" class="form-label">
+                            <i class="fas fa-lock me-2"></i>Conferma Password
+                        </label>
+                        <input type="password" class="form-control" id="password_confirm" name="password_confirm" 
+                               placeholder="Ripeti la password" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 mb-3">
+                        <i class="fas fa-user-plus me-2"></i>Registrati
+                    </button>
+                </form>
+
+                <div class="text-center">
+                    <p class="mb-0">Hai già un account?</p>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-sign-in-alt me-2"></i>Accedi
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+// Validazione password in tempo reale
+document.getElementById('password_confirm').addEventListener('input', function() {
+    const password = document.getElementById('password').value;
+    const confirmPassword = this.value;
+    
+    if (password !== confirmPassword) {
+        this.setCustomValidity('Le password non coincidono');
+    } else {
+        this.setCustomValidity('');
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

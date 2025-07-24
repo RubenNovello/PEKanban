@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Taskboard{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="text-white mb-0">
+            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+        </h1>
+        <p class="text-white-50">Benvenuto, {{ session.username }}!</p>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('add_task') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Nuovo Task
+        </a>
+    </div>
+</div>
+
+<!-- Statistiche -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <i class="fas fa-tasks fa-2x mb-2"></i>
+                <h3>{{ stats.total }}</h3>
+                <p class="mb-0">Totale Task</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <i class="fas fa-clock fa-2x mb-2 text-warning"></i>
+                <h3>{{ stats.todo }}</h3>
+                <p class="mb-0">Da Fare</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <i class="fas fa-spinner fa-2x mb-2 text-info"></i>
+                <h3>{{ stats.doing }}</h3>
+                <p class="mb-0">In Corso</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
+                <h3>{{ stats.done }}</h3>
+                <p class="mb-0">Completati</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista Task -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-2"></i>I Tuoi Task
+        </h5>
+        <a href="{{ url_for('kanban') }}" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-columns me-1"></i>Vista Kanban
+        </a>
+    </div>
+    <div class="card-body">
+        {% if tasks %}
+            <div class="row">
+                {% for task in tasks %}
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card task-card task-{{ task.status.lower() }}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="card-title mb-0">{{ task.title }}</h6>
+                                <span class="badge bg-{{ 'warning' if task.status == 'ToDo' else 'primary' if task.status == 'Doing' else 'success' }}">
+                                    {{ task.status }}
+                                </span>
+                            </div>
+                            
+                            {% if task.description %}
+                            <p class="card-text text-muted small">
+                                {{ task.description[:100] }}{% if task.description|length > 100 %}...{% endif %}
+                            </p>
+                            {% endif %}
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    {{ task.created_at.strftime('%d/%m/%Y') }}
+                                </small>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('edit_task', task_id=task.task_id) }}" 
+                                       class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-outline-danger btn-sm" 
+                                            onclick="deleteTask({{ task.task_id }}, '{{ task.title }}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Nessun task trovato</h5>
+                <p class="text-muted">Inizia creando il tuo primo task!</p>
+                <a href="{{ url_for('add_task') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Crea il primo task
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal per conferma eliminazione -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Conferma Eliminazione</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Sei sicuro di voler eliminare il task "<span id="taskTitle"></span>"?</p>
+                <p class="text-muted small">Questa azione non può essere annullata.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Elimina
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function deleteTask(taskId, taskTitle) {
+    document.getElementById('taskTitle').textContent = taskTitle;
+    document.getElementById('deleteForm').action = '/delete_task/' + taskId;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+{% endblock %}

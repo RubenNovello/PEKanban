@@ -149,10 +149,29 @@ CREATE TABLE tasks (
 - [x] **Step 6**: Modularità (10 punti)
 - [x] **Step 7**: Refactoring (10 punti)
 
-### 🎁 Bonus Implementati
-- [ ] **Bonus 1**: Interfaccia Web Flask (15 punti) - *Non implementato*
-- [ ] **Bonus 2**: GUI Desktop Kivy (15 punti) - *Non implementato*
+### 🎁 Bonus Implementati - TUTTI COMPLETATI! 🎉
+- [x] **Bonus 1**: Interfaccia Web Flask (15 punti) - **✅ IMPLEMENTATO**
+- [x] **Bonus 2**: GUI Desktop Kivy (15 punti) - **✅ IMPLEMENTATO**
 - [x] **Bonus 3**: CLI avanzata con Rich (15 punti) - **✅ IMPLEMENTATO**
+
+#### Dettagli Bonus 1 - Interfaccia Web Flask
+**Applicazione Web (`main_flask.py`):**
+- 🌐 **Server Flask**: Interfaccia web completa su http://localhost:5000
+- 🎨 **Bootstrap UI**: Design moderno e responsive
+- 🔐 **Autenticazione web**: Login e registrazione via form
+- 📋 **CRUD completo**: Creazione, modifica, eliminazione task via web
+- 📊 **Dashboard**: Statistiche e overview dei task
+- 🎯 **Bacheca Kanban**: Vista Kanban interattiva
+- 📱 **Responsive**: Compatibile con desktop e mobile
+
+#### Dettagli Bonus 2 - GUI Desktop Kivy
+**Applicazione Desktop (`main_kivy.py`):**
+- 🖥️ **GUI nativa**: Interfaccia desktop con Kivy
+- 🔑 **Login desktop**: Schermata di autenticazione grafica
+- 📝 **Gestione task**: Form grafici per CRUD task
+- 🎨 **UI moderna**: Layout responsive e user-friendly
+- 🔄 **Navigazione**: Screen manager per diverse schermate
+- ⚡ **Performance**: Applicazione desktop veloce e fluida
 
 #### Dettagli Bonus 3 - CLI Avanzata
 Il **Bonus 3** è stato completamente implementato con le seguenti caratteristiche:

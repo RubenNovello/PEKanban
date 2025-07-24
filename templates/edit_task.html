@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Modifica Task - Taskboard{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-edit me-2"></i>Modifica Task
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">
+                            <i class="fas fa-heading me-2"></i>Titolo *
+                        </label>
+                        <input type="text" class="form-control" id="title" name="title" 
+                               value="{{ task.title }}" placeholder="Inserisci il titolo del task" 
+                               required minlength="3" maxlength="100">
+                        <div class="form-text">Minimo 3 caratteri, massimo 100</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">
+                            <i class="fas fa-align-left me-2"></i>Descrizione
+                        </label>
+                        <textarea class="form-control" id="description" name="description" rows="4" 
+                                  placeholder="Descrizione dettagliata del task (opzionale)" 
+                                  maxlength="500">{{ task.description }}</textarea>
+                        <div class="form-text">Massimo 500 caratteri</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="status" class="form-label">
+                            <i class="fas fa-flag me-2"></i>Stato
+                        </label>
+                        <select class="form-select" id="status" name="status" required>
+                            <option value="ToDo" {% if task.status == 'ToDo' %}selected{% endif %}>
+                                📋 ToDo - Da fare
+                            </option>
+                            <option value="Doing" {% if task.status == 'Doing' %}selected{% endif %}>
+                                🔄 Doing - In corso
+                            </option>
+                            <option value="Done" {% if task.status == 'Done' %}selected{% endif %}>
+                                ✅ Done - Completato
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <small class="text-muted">
+                                <i class="fas fa-calendar-plus me-1"></i>
+                                Creato: {{ task.created_at.strftime('%d/%m/%Y %H:%M') }}
+                            </small>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <small class="text-muted">
+                                <i class="fas fa-calendar-edit me-1"></i>
+                                Modificato: {{ task.updated_at.strftime('%d/%m/%Y %H:%M') }}
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Annulla
+                        </a>
+                        <div>
+                            <button type="button" class="btn btn-outline-danger me-2" 
+                                    onclick="deleteTask({{ task.task_id }}, '{{ task.title }}')">
+                                <i class="fas fa-trash me-2"></i>Elimina
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Salva Modifiche
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal per conferma eliminazione -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Conferma Eliminazione</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Sei sicuro di voler eliminare il task "<span id="taskTitle"></span>"?</p>
+                <p class="text-muted small">Questa azione non può essere annullata.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Elimina
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Contatore caratteri per la descrizione
+document.getElementById('description').addEventListener('input', function() {
+    const maxLength = 500;
+    const currentLength = this.value.length;
+    const remaining = maxLength - currentLength;
+    
+    let formText = this.nextElementSibling;
+    formText.textContent = `${remaining} caratteri rimanenti`;
+    
+    if (remaining < 50) {
+        formText.className = 'form-text text-warning';
+    } else {
+        formText.className = 'form-text';
+    }
+});
+
+// Contatore caratteri per il titolo
+document.getElementById('title').addEventListener('input', function() {
+    const maxLength = 100;
+    const currentLength = this.value.length;
+    const remaining = maxLength - currentLength;
+    
+    let formText = this.nextElementSibling;
+    formText.textContent = `${remaining} caratteri rimanenti (minimo 3)`;
+    
+    if (remaining < 10) {
+        formText.className = 'form-text text-warning';
+    } else {
+        formText.className = 'form-text';
+    }
+});
+
+function deleteTask(taskId, taskTitle) {
+    document.getElementById('taskTitle').textContent = taskTitle;
+    document.getElementById('deleteForm').action = '/delete_task/' + taskId;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+
+// Inizializza i contatori al caricamento della pagina
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('description').dispatchEvent(new Event('input'));
+    document.getElementById('title').dispatchEvent(new Event('input'));
+});
+</script>
+{% endblock %}
