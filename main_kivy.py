@@ -281,17 +281,22 @@ class DashboardScreen(Screen):
     
     def set_user(self, user):
         self.current_user = user
-        self.title_label.text = f'Dashboard - {user.username}'
+        if user:
+            self.title_label.text = f'Dashboard - {user.username}'
+        else:
+            self.title_label.text = 'Dashboard'
     
     def refresh_tasks(self):
-        if not self.current_user:
+        # Ottiene l'utente corrente dall'app
+        app = App.get_running_app()
+        if not app.current_user:
             return
         
         # Pulisce la lista
         self.task_layout.clear_widgets()
         
         # Carica i task
-        tasks = self.db.get_tasks_by_user(self.current_user.user_id)
+        tasks = self.db.get_tasks_by_user(app.current_user.user_id)
         
         if not tasks:
             no_tasks_label = Label(
@@ -382,6 +387,9 @@ class DashboardScreen(Screen):
     def edit_task(self, task):
         app = App.get_running_app()
         app.current_task = task
+        # Imposta il task nella schermata di modifica prima di navigare
+        edit_screen = self.manager.get_screen('edit_task')
+        edit_screen.set_task(task)
         self.manager.current = 'edit_task'
     
     def delete_task(self, task):
