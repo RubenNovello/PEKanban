@@ -250,17 +250,16 @@ class SimpleRichTaskboardView:
     def show_status_menu(self) -> str:
         """Mostra il menu per la selezione dello stato"""
         status_panel = Panel(
-            "[bold blue]CAMBIA STATO TASK[/bold blue]",
+            "[bold blue]CAMBIA STATO TASK[/bold blue]\n\n1. ToDo\n2. Doing\n3. Done",
             style="blue",
             box=box.DOUBLE
         )
         self.console.print(status_panel)
         
         return Prompt.ask(
-            "[bold]Scegli nuovo stato[/bold]",
+            "[bold]Scegli nuovo stato (1-3)[/bold]",
             choices=["1", "2", "3"],
-            show_choices=True,
-            choices_map={"1": "ToDo", "2": "Doing", "3": "Done"}
+            show_choices=False
         )
     
     def get_task_id(self, action: str = "selezionare") -> int:
