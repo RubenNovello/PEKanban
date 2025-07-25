@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}Profilo - Taskboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5><i class="fas fa-user-circle me-2"></i>Informazioni Profilo</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" 
+                         style="width: 80px; height: 80px; font-size: 2rem;">
+                        {{ user.username[0].upper() }}
+                    </div>
+                </div>
+                
+                <table class="table table-borderless">
+                    <tr>
+                        <td><strong>Username:</strong></td>
+                        <td>{{ user.username }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Email:</strong></td>
+                        <td>{{ user.email }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tipo:</strong></td>
+                        <td>
+                            {% if user.is_admin %}
+                                <span class="badge bg-danger">Amministratore</span>
+                            {% else %}
+                                <span class="badge bg-primary">Utente</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Registrato:</strong></td>
+                        <td>{{ user.created_at.strftime('%d/%m/%Y') }}</td>
+                    </tr>
+                </table>
+                
+                <div class="d-grid">
+                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                        <i class="fas fa-key me-2"></i>Cambia Password
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5><i class="fas fa-chart-bar me-2"></i>Statistiche Task</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h3 class="text-primary">{{ task_stats.total }}</h3>
+                                <p class="mb-0">Totali</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h3 class="text-danger">{{ task_stats.todo }}</h3>
+                                <p class="mb-0">Da Fare</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h3 class="text-warning">{{ task_stats.doing }}</h3>
+                                <p class="mb-0">In Corso</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h3 class="text-success">{{ task_stats.done }}</h3>
+                                <p class="mb-0">Completati</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if task_stats.total > 0 %}
+                <div class="mt-4">
+                    <h6>Progresso Completamento</h6>
+                    <div class="progress" style="height: 20px;">
+                        <div class="progress-bar bg-success" style="width: {{ (task_stats.done / task_stats.total * 100)|round(1) }}%">
+                            {{ (task_stats.done / task_stats.total * 100)|round(1) }}%
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="mt-4 text-center">
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                        <i class="fas fa-tachometer-alt me-2"></i>Vai alla Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-key me-2"></i>Cambia Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="changePasswordForm" action="{{ url_for('profile') }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="currentPassword" class="form-label">Password Attuale</label>
+                        <input type="password" class="form-control" id="currentPassword" name="current_password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newPassword" class="form-label">Nuova Password</label>
+                        <input type="password" class="form-control" id="newPassword" name="new_password" required minlength="6">
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirmNewPassword" class="form-label">Conferma Nuova Password</label>
+                        <input type="password" class="form-control" id="confirmNewPassword" name="confirm_new_password" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Salva Password
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Password confirmation validation
+document.getElementById('confirmNewPassword').addEventListener('input', function() {
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = this.value;
+    
+    if (newPassword !== confirmPassword) {
+        this.setCustomValidity('Le password non coincidono');
+    } else {
+        this.setCustomValidity('');
+    }
+});
+</script>
+{% endblock %}

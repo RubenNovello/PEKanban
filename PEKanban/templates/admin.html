@@ -1,0 +1,687 @@
+{% extends "base.html" %}
+
+{% block title %}Pannello Admin - Taskboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-cog me-2"></i>Pannello Amministrativo</h2>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-2x mb-2"></i>
+                <h3>{{ stats.total_users }}</h3>
+                <p class="mb-0">Utenti Totali</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-user-shield fa-2x mb-2"></i>
+                <h3>{{ stats.admin_users }}</h3>
+                <p class="mb-0">Amministratori</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-tasks fa-2x mb-2"></i>
+                <h3>{{ stats.total_tasks }}</h3>
+                <p class="mb-0">Task Totali</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-check-circle fa-2x mb-2"></i>
+                <h3>{{ stats.done_tasks }}</h3>
+                <p class="mb-0">Task Completati</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabs -->
+<ul class="nav nav-tabs" id="adminTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button">
+            <i class="fas fa-users me-2"></i>Gestione Utenti
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#tasks" type="button">
+            <i class="fas fa-tasks me-2"></i>Tutti i Task
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="system-tab" data-bs-toggle="tab" data-bs-target="#system" type="button">
+            <i class="fas fa-server me-2"></i>Sistema
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="adminTabsContent">
+    <!-- Users Tab -->
+    <div class="tab-pane fade show active" id="users" role="tabpanel">
+        <!-- Create User Form -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5><i class="fas fa-user-plus me-2"></i>Crea Nuovo Utente</h5>
+            </div>
+            <div class="card-body">
+                <form id="createUserForm" onsubmit="createUser(event)">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="newUsername" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="newUsername" name="username" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="newEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="newEmail" name="email" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="newPassword" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="newPassword" name="password" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label">Tipo</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="newIsAdmin" name="is_admin">
+                                    <label class="form-check-label" for="newIsAdmin">
+                                        Amministratore
+                                    </label>
+                                </div>
+                                <button type="submit" class="btn btn-success btn-sm mt-2">
+                                    <i class="fas fa-plus me-1"></i>Crea Utente
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Assign Task Form -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5><i class="fas fa-tasks me-2"></i>Assegna Task</h5>
+            </div>
+            <div class="card-body">
+                <form id="assignTaskForm" onsubmit="assignTask(event)">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="taskTitle" class="form-label">Titolo Task</label>
+                                <input type="text" class="form-control" id="taskTitle" name="title" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="taskDescription" class="form-label">Descrizione</label>
+                                <input type="text" class="form-control" id="taskDescription" name="description">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="assignedUser" class="form-label">Assegna a</label>
+                                <select class="form-select" id="assignedUser" name="assigned_user_id" required>
+                                    <option value="">Seleziona utente...</option>
+                                    {% for user in users %}
+                                    <option value="{{ user.user_id }}">{{ user.username }} ({{ 'Admin' if user.is_admin else 'User' }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="mb-3">
+                                <label class="form-label">&nbsp;</label>
+                                <button type="submit" class="btn btn-primary btn-sm d-block">
+                                    <i class="fas fa-plus me-1"></i>Assegna
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Users List -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5><i class="fas fa-users me-2"></i>Utenti Registrati</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Tipo</th>
+                                <th>Registrato</th>
+                                <th>Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td><code>{{ user.user_id[:8] }}</code></td>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    {% if user.is_admin %}
+                                        <span class="badge bg-danger">Admin</span>
+                                    {% else %}
+                                        <span class="badge bg-primary">User</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ user.created_at.strftime('%d/%m/%Y') }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        {% if not user.is_admin %}
+                                        <button class="btn btn-outline-warning" onclick="promoteUser('{{ user.user_id }}')" title="Promuovi ad Admin">
+                                            <i class="fas fa-arrow-up"></i>
+                                        </button>
+                                        {% else %}
+                                        <button class="btn btn-outline-info" onclick="demoteUser('{{ user.user_id }}')" title="Rimuovi Admin">
+                                            <i class="fas fa-arrow-down"></i>
+                                        </button>
+                                        {% endif %}
+                                        <button class="btn btn-outline-primary" onclick="resetPassword('{{ user.user_id }}')" title="Reset Password">
+                                            <i class="fas fa-key"></i>
+                                        </button>
+                                        {% if user.user_id != session.user_id %}
+                                        <button class="btn btn-outline-danger" onclick="deleteUser('{{ user.user_id }}')" title="Elimina Utente">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tasks Tab -->
+    <div class="tab-pane fade" id="tasks" role="tabpanel">
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5><i class="fas fa-tasks me-2"></i>Tutti i Task</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Titolo</th>
+                                <th>Stato</th>
+                                <th>Proprietario</th>
+                                <th>Email</th>
+                                <th>Creato</th>
+                                <th>Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in tasks_with_users %}
+                            <tr>
+                                <td><code>{{ item.task.task_id[:8] }}</code></td>
+                                <td title="{{ item.task.title }}">{{ item.task.title[:30] }}{% if item.task.title|length > 30 %}...{% endif %}</td>
+                                <td>
+                                    <select class="form-select form-select-sm" onchange="updateTaskStatus('{{ item.task.task_id }}', this.value)">
+                                        <option value="To Do" {% if item.task.status == 'To Do' %}selected{% endif %}>To Do</option>
+                                        <option value="Doing" {% if item.task.status == 'Doing' %}selected{% endif %}>Doing</option>
+                                        <option value="Done" {% if item.task.status == 'Done' %}selected{% endif %}>Done</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if item.owner_is_admin %}danger{% else %}primary{% endif %}">
+                                        {{ item.owner_username }}
+                                    </span>
+                                </td>
+                                <td><small>{{ item.owner_email }}</small></td>
+                                <td>{{ item.task.created_at.strftime('%d/%m/%Y') }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary" onclick="editTaskModal('{{ item.task.task_id }}', '{{ item.task.title }}', '{{ item.task.description }}')" title="Modifica">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger" onclick="deleteTask('{{ item.task.task_id }}')" title="Elimina">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Tab -->
+    <div class="tab-pane fade" id="system" role="tabpanel">
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5><i class="fas fa-server me-2"></i>Informazioni Sistema</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Statistiche Database</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Utenti Totali:</span>
+                                <strong>{{ stats.total_users }}</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Amministratori:</span>
+                                <strong>{{ stats.admin_users }}</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Task Totali:</span>
+                                <strong>{{ stats.total_tasks }}</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Task Da Fare:</span>
+                                <strong>{{ stats.todo_tasks }}</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Task In Corso:</span>
+                                <strong>{{ stats.doing_tasks }}</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Task Completati:</span>
+                                <strong>{{ stats.done_tasks }}</strong>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Azioni Sistema</h6>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-info" onclick="backupDatabase()">
+                                <i class="fas fa-download me-2"></i>Backup Database
+                            </button>
+                            <button class="btn btn-outline-warning" onclick="cleanupTokens()">
+                                <i class="fas fa-broom me-2"></i>Pulisci Token Scaduti
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="exportData()">
+                                <i class="fas fa-file-export me-2"></i>Esporta Dati
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal per modifica task -->
+<div class="modal fade" id="editTaskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Modifica Task</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editTaskForm">
+                    <input type="hidden" id="editTaskId" name="task_id">
+                    <div class="mb-3">
+                        <label for="editTaskTitle" class="form-label">Titolo</label>
+                        <input type="text" class="form-control" id="editTaskTitle" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editTaskDesc" class="form-label">Descrizione</label>
+                        <textarea class="form-control" id="editTaskDesc" name="description" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <button type="button" class="btn btn-primary" onclick="saveTaskChanges()">Salva Modifiche</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal per reset password -->
+<div class="modal fade" id="resetPasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reset Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="resetPasswordForm">
+                    <input type="hidden" id="resetUserId" name="user_id">
+                    <div class="mb-3">
+                        <label for="newPasswordReset" class="form-label">Nuova Password</label>
+                        <input type="password" class="form-control" id="newPasswordReset" name="new_password" required minlength="6">
+                        <div class="form-text">La password deve essere di almeno 6 caratteri</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <button type="button" class="btn btn-primary" onclick="savePasswordReset()">Reset Password</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Crea nuovo utente
+function createUser(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    
+    fetch('/admin/create_user', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('success', data.message);
+            event.target.reset();
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showAlert('danger', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('danger', 'Errore durante la creazione dell\'utente');
+    });
+}
+
+// Assegna task
+function assignTask(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    
+    fetch('/admin/assign_task', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('success', data.message);
+            event.target.reset();
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showAlert('danger', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('danger', 'Errore durante l\'assegnazione del task');
+    });
+}
+
+// Promuovi utente ad admin
+function promoteUser(userId) {
+    if (confirm('Promuovere questo utente ad amministratore?')) {
+        const formData = new FormData();
+        formData.append('user_id', userId);
+        
+        fetch('/admin/promote_user', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('success', data.message);
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showAlert('danger', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('danger', 'Errore durante la promozione');
+        });
+    }
+}
+
+// Rimuovi privilegi admin
+function demoteUser(userId) {
+    if (confirm('Rimuovere i privilegi di amministratore da questo utente?')) {
+        const formData = new FormData();
+        formData.append('user_id', userId);
+        
+        fetch('/admin/demote_user', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('success', data.message);
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showAlert('danger', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('danger', 'Errore durante la rimozione privilegi');
+        });
+    }
+}
+
+// Reset password utente
+function resetPassword(userId) {
+    document.getElementById('resetUserId').value = userId;
+    const modal = new bootstrap.Modal(document.getElementById('resetPasswordModal'));
+    modal.show();
+}
+
+function savePasswordReset() {
+    const formData = new FormData(document.getElementById('resetPasswordForm'));
+    
+    fetch('/admin/reset_password', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('success', data.message);
+            bootstrap.Modal.getInstance(document.getElementById('resetPasswordModal')).hide();
+            document.getElementById('resetPasswordForm').reset();
+        } else {
+            showAlert('danger', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('danger', 'Errore durante il reset password');
+    });
+}
+
+// Elimina utente
+function deleteUser(userId) {
+    if (confirm('ATTENZIONE: Eliminare questo utente e tutti i suoi task? Questa azione non può essere annullata.')) {
+        const formData = new FormData();
+        formData.append('user_id', userId);
+        
+        fetch('/admin/delete_user', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('success', data.message);
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showAlert('danger', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('danger', 'Errore durante l\'eliminazione');
+        });
+    }
+}
+
+// Aggiorna stato task
+function updateTaskStatus(taskId, newStatus) {
+    const formData = new FormData();
+    formData.append('task_id', taskId);
+    formData.append('new_status', newStatus);
+    
+    fetch('/update_task_status', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('success', data.message);
+        } else {
+            showAlert('danger', data.message);
+            location.reload(); // Ricarica per ripristinare lo stato precedente
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('danger', 'Errore durante l\'aggiornamento dello stato');
+        location.reload();
+    });
+}
+
+// Modifica task modal
+function editTaskModal(taskId, title, description) {
+    document.getElementById('editTaskId').value = taskId;
+    document.getElementById('editTaskTitle').value = title;
+    document.getElementById('editTaskDesc').value = description;
+    
+    const modal = new bootstrap.Modal(document.getElementById('editTaskModal'));
+    modal.show();
+}
+
+function saveTaskChanges() {
+    const taskId = document.getElementById('editTaskId').value;
+    const title = document.getElementById('editTaskTitle').value;
+    const description = document.getElementById('editTaskDesc').value;
+    
+    if (!title.trim()) {
+        showAlert('danger', 'Il titolo è obbligatorio');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('description', description);
+    
+    fetch(`/edit_task/${taskId}`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (response.redirected) {
+            // Se la risposta è un redirect, significa successo
+            showAlert('success', 'Task aggiornato con successo!');
+            bootstrap.Modal.getInstance(document.getElementById('editTaskModal')).hide();
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            return response.text();
+        }
+    })
+    .then(data => {
+        if (data) {
+            // Se c'è del contenuto, potrebbe essere un errore
+            showAlert('danger', 'Errore durante l\'aggiornamento del task');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('danger', 'Errore durante l\'aggiornamento del task');
+    });
+}
+
+// Elimina task
+function deleteTask(taskId) {
+    if (confirm('Eliminare questo task?')) {
+        const formData = new FormData();
+        formData.append('_method', 'DELETE');
+        
+        fetch(`/delete_task/${taskId}`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('success', data.message);
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showAlert('danger', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('danger', 'Errore durante l\'eliminazione del task');
+        });
+    }
+}
+
+function backupDatabase() {
+    showAlert('info', 'Funzionalità backup in sviluppo');
+}
+
+function cleanupTokens() {
+    showAlert('info', 'Funzionalità pulizia token in sviluppo');
+}
+
+function exportData() {
+    showAlert('info', 'Funzionalità esportazione in sviluppo');
+}
+
+// Show alert function
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.container');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

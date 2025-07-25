@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Errore {{ error_code }} - Taskboard{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 text-center">
+        <div class="card shadow">
+            <div class="card-body py-5">
+                <div class="mb-4">
+                    <i class="fas fa-exclamation-triangle text-warning" style="font-size: 4rem;"></i>
+                </div>
+                
+                <h1 class="display-4 text-muted">{{ error_code }}</h1>
+                
+                <h4 class="mb-3">
+                    {% if error_code == 404 %}
+                        Pagina Non Trovata
+                    {% elif error_code == 500 %}
+                        Errore Interno del Server
+                    {% elif error_code == 403 %}
+                        Accesso Negato
+                    {% else %}
+                        Errore
+                    {% endif %}
+                </h4>
+                
+                <p class="text-muted mb-4">
+                    {% if error_code == 404 %}
+                        La pagina che stai cercando non esiste o è stata spostata.
+                    {% elif error_code == 500 %}
+                        Si è verificato un errore interno del server. Riprova più tardi.
+                    {% elif error_code == 403 %}
+                        Non hai i permessi necessari per accedere a questa risorsa.
+                    {% else %}
+                        {{ error_message or "Si è verificato un errore imprevisto." }}
+                    {% endif %}
+                </p>
+                
+                <div class="d-flex gap-2 justify-content-center">
+                    <a href="{{ url_for('dashboard') if session.user_id else url_for('login') }}" class="btn btn-primary">
+                        <i class="fas fa-home me-2"></i>
+                        {% if session.user_id %}
+                            Torna alla Dashboard
+                        {% else %}
+                            Vai al Login
+                        {% endif %}
+                    </a>
+                    
+                    <button onclick="history.back()" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Indietro
+                    </button>
+                </div>
+                
+                {% if error_code == 500 %}
+                <div class="mt-4">
+                    <small class="text-muted">
+                        Se il problema persiste, contatta l'amministratore del sistema.
+                    </small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Additional Help -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0"><i class="fas fa-question-circle me-2"></i>Hai bisogno di aiuto?</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <a href="{{ url_for('dashboard') if session.user_id else url_for('login') }}" class="text-decoration-none">
+                            <i class="fas fa-tachometer-alt fa-2x text-primary mb-2 d-block"></i>
+                            <small>Dashboard</small>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        {% if session.user_id %}
+                        <a href="{{ url_for('profile') }}" class="text-decoration-none">
+                            <i class="fas fa-user fa-2x text-success mb-2 d-block"></i>
+                            <small>Profilo</small>
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('register') }}" class="text-decoration-none">
+                            <i class="fas fa-user-plus fa-2x text-success mb-2 d-block"></i>
+                            <small>Registrati</small>
+                        </a>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        {% if session.is_admin %}
+                        <a href="{{ url_for('admin_panel') }}" class="text-decoration-none">
+                            <i class="fas fa-cog fa-2x text-warning mb-2 d-block"></i>
+                            <small>Admin</small>
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('login') }}" class="text-decoration-none">
+                            <i class="fas fa-sign-in-alt fa-2x text-info mb-2 d-block"></i>
+                            <small>Login</small>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Auto-redirect after 10 seconds for 500 errors
+{% if error_code == 500 %}
+setTimeout(function() {
+    if (confirm('Vuoi essere reindirizzato automaticamente alla homepage?')) {
+        window.location.href = "{{ url_for('dashboard') if session.user_id else url_for('login') }}";
+    }
+}, 10000);
+{% endif %}
+
+// Add some animation to the error icon
+document.addEventListener('DOMContentLoaded', function() {
+    const errorIcon = document.querySelector('.fa-exclamation-triangle');
+    if (errorIcon) {
+        errorIcon.style.animation = 'pulse 2s infinite';
+    }
+});
+</script>
+
+<style>
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+</style>
+{% endblock %}

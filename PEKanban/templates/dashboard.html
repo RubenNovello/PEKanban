@@ -1,0 +1,391 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Taskboard{% endblock %}
+
+{% block extra_head %}
+<style>
+.kanban-board {
+    display: flex;
+    gap: 20px;
+    min-height: 600px;
+}
+
+.kanban-column {
+    flex: 1;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    min-height: 500px;
+}
+
+.kanban-header {
+    text-align: center;
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.todo-header { background: #dc3545; color: white; }
+.doing-header { background: #ffc107; color: black; }
+.done-header { background: #28a745; color: white; }
+
+.task-card {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+    cursor: move;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.task-card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+}
+
+.task-card.dragging {
+    opacity: 0.5;
+    transform: rotate(5deg);
+}
+
+.kanban-column.drag-over {
+    background: #e3f2fd;
+    border: 2px dashed #2196f3;
+}
+
+.task-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.task-description {
+    font-size: 0.9em;
+    color: #6c757d;
+    margin-bottom: 8px;
+}
+
+.task-meta {
+    font-size: 0.8em;
+    color: #6c757d;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.task-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.btn-sm {
+    padding: 2px 6px;
+    font-size: 0.75em;
+}
+
+.add-task-btn {
+    width: 100%;
+    border: 2px dashed #6c757d;
+    background: transparent;
+    color: #6c757d;
+    padding: 15px;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+.add-task-btn:hover {
+    border-color: #007bff;
+    color: #007bff;
+    background: rgba(0,123,255,0.1);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-tachometer-alt me-2"></i>Dashboard</h2>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTaskModal">
+        <i class="fas fa-plus me-2"></i>Nuovo Task
+    </button>
+</div>
+
+<!-- Kanban Board -->
+<div class="kanban-board">
+    <!-- TO DO Column -->
+    <div class="kanban-column" data-status="To Do" ondrop="drop(event)" ondragover="allowDrop(event)">
+        <div class="kanban-header todo-header">
+            <i class="fas fa-clipboard-list me-2"></i>TO DO ({{ todo_tasks|length }})
+        </div>
+        {% for task in todo_tasks %}
+        <div class="task-card" draggable="true" ondragstart="drag(event)" data-task-id="{{ task.task_id }}">
+            <div class="task-title">{{ task.title }}</div>
+            {% if task.description %}
+            <div class="task-description">{{ task.description[:100] }}{% if task.description|length > 100 %}...{% endif %}</div>
+            {% endif %}
+            <div class="task-meta">
+                <small>{{ task.created_at.strftime('%d/%m/%Y') }}</small>
+                <div class="task-actions">
+                    <a href="{{ url_for('edit_task', task_id=task.task_id) }}" class="btn btn-outline-primary btn-sm" title="Modifica">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <button class="btn btn-outline-danger btn-sm" onclick="deleteTask('{{ task.task_id }}')" title="Elimina">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+        <button class="add-task-btn" data-bs-toggle="modal" data-bs-target="#addTaskModal">
+            <i class="fas fa-plus me-2"></i>Aggiungi Task
+        </button>
+    </div>
+
+    <!-- DOING Column -->
+    <div class="kanban-column" data-status="Doing" ondrop="drop(event)" ondragover="allowDrop(event)">
+        <div class="kanban-header doing-header">
+            <i class="fas fa-cog me-2"></i>IN LAVORAZIONE ({{ doing_tasks|length }})
+        </div>
+        {% for task in doing_tasks %}
+        <div class="task-card" draggable="true" ondragstart="drag(event)" data-task-id="{{ task.task_id }}">
+            <div class="task-title">{{ task.title }}</div>
+            {% if task.description %}
+            <div class="task-description">{{ task.description[:100] }}{% if task.description|length > 100 %}...{% endif %}</div>
+            {% endif %}
+            <div class="task-meta">
+                <small>{{ task.created_at.strftime('%d/%m/%Y') }}</small>
+                <div class="task-actions">
+                    <a href="{{ url_for('edit_task', task_id=task.task_id) }}" class="btn btn-outline-primary btn-sm" title="Modifica">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <button class="btn btn-outline-danger btn-sm" onclick="deleteTask('{{ task.task_id }}')" title="Elimina">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- DONE Column -->
+    <div class="kanban-column" data-status="Done" ondrop="drop(event)" ondragover="allowDrop(event)">
+        <div class="kanban-header done-header">
+            <i class="fas fa-check-circle me-2"></i>COMPLETATI ({{ done_tasks|length }})
+        </div>
+        {% for task in done_tasks %}
+        <div class="task-card" draggable="true" ondragstart="drag(event)" data-task-id="{{ task.task_id }}">
+            <div class="task-title">{{ task.title }}</div>
+            {% if task.description %}
+            <div class="task-description">{{ task.description[:100] }}{% if task.description|length > 100 %}...{% endif %}</div>
+            {% endif %}
+            <div class="task-meta">
+                <small>{{ task.created_at.strftime('%d/%m/%Y') }}</small>
+                <div class="task-actions">
+                    <a href="{{ url_for('edit_task', task_id=task.task_id) }}" class="btn btn-outline-primary btn-sm" title="Modifica">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <button class="btn btn-outline-danger btn-sm" onclick="deleteTask('{{ task.task_id }}')" title="Elimina">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Add Task Modal -->
+<div class="modal fade" id="addTaskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Nuovo Task</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addTaskForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="taskTitle" class="form-label">Titolo *</label>
+                        <input type="text" class="form-control" id="taskTitle" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="taskDescription" class="form-label">Descrizione</label>
+                        <textarea class="form-control" id="taskDescription" name="description" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Crea Task
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Drag and Drop functionality
+function allowDrop(ev) {
+    ev.preventDefault();
+    ev.currentTarget.classList.add('drag-over');
+}
+
+function drag(ev) {
+    ev.dataTransfer.setData("text", ev.target.dataset.taskId);
+    ev.target.classList.add('dragging');
+}
+
+function drop(ev) {
+    ev.preventDefault();
+    ev.currentTarget.classList.remove('drag-over');
+    
+    const taskId = ev.dataTransfer.getData("text");
+    const newStatus = ev.currentTarget.dataset.status;
+    const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+    
+    if (taskElement) {
+        taskElement.classList.remove('dragging');
+        
+        // Update task status via AJAX
+        updateTaskStatus(taskId, newStatus, taskElement, ev.currentTarget);
+    }
+}
+
+// Remove drag-over class when leaving
+document.querySelectorAll('.kanban-column').forEach(column => {
+    column.addEventListener('dragleave', function(e) {
+        if (!this.contains(e.relatedTarget)) {
+            this.classList.remove('drag-over');
+        }
+    });
+});
+
+function updateTaskStatus(taskId, newStatus, taskElement, targetColumn) {
+    const formData = new FormData();
+    formData.append('task_id', taskId);
+    formData.append('new_status', newStatus);
+    
+    fetch('/update_task_status', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Move task to new column
+            targetColumn.insertBefore(taskElement, targetColumn.querySelector('.add-task-btn'));
+            
+            // Update counters
+            updateCounters();
+            
+            // Show success message
+            showAlert('success', data.message);
+        } else {
+            showAlert('danger', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('danger', 'Errore durante l\'aggiornamento del task');
+    });
+}
+
+function updateCounters() {
+    document.querySelectorAll('.kanban-column').forEach(column => {
+        const status = column.dataset.status;
+        const count = column.querySelectorAll('.task-card').length;
+        const header = column.querySelector('.kanban-header');
+        
+        if (status === 'To Do') {
+            header.innerHTML = '<i class="fas fa-clipboard-list me-2"></i>TO DO (' + count + ')';
+        } else if (status === 'Doing') {
+            header.innerHTML = '<i class="fas fa-cog me-2"></i>IN LAVORAZIONE (' + count + ')';
+        } else if (status === 'Done') {
+            header.innerHTML = '<i class="fas fa-check-circle me-2"></i>COMPLETATI (' + count + ')';
+        }
+    });
+}
+
+// Add task form submission
+document.getElementById('addTaskForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch('/add_task', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('addTaskModal')).hide();
+            
+            // Reset form
+            this.reset();
+            
+            // Reload page to show new task
+            location.reload();
+        } else {
+            showAlert('danger', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('danger', 'Errore durante la creazione del task');
+    });
+});
+
+function deleteTask(taskId) {
+    if (confirm('Sei sicuro di voler eliminare questo task?')) {
+        const formData = new FormData();
+        formData.append('_method', 'DELETE');
+        
+        fetch(`/delete_task/${taskId}`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove task element
+                document.querySelector(`[data-task-id="${taskId}"]`).remove();
+                updateCounters();
+                showAlert('success', data.message);
+            } else {
+                showAlert('danger', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('danger', 'Errore durante l\'eliminazione del task');
+        });
+    }
+}
+
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.container');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

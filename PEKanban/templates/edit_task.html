@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Modifica Task - Taskboard{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-dark">
+                <h4><i class="fas fa-edit me-2"></i>Modifica Task</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Titolo *</label>
+                        <input type="text" class="form-control" id="title" name="title" 
+                               value="{{ task.title }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Descrizione</label>
+                        <textarea class="form-control" id="description" name="description" 
+                                  rows="4">{{ task.description or '' }}</textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Stato Attuale</label>
+                        <div class="p-2 rounded" style="background-color: 
+                            {% if task.status == 'To Do' %}#dc3545{% elif task.status == 'Doing' %}#ffc107{% else %}#28a745{% endif %}; 
+                            color: {% if task.status == 'Doing' %}black{% else %}white{% endif %};">
+                            <i class="fas fa-{% if task.status == 'To Do' %}clipboard-list{% elif task.status == 'Doing' %}cog{% else %}check-circle{% endif %} me-2"></i>
+                            {{ task.status }}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Informazioni</label>
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar-plus me-1"></i>
+                                    Creato: {{ task.created_at.strftime('%d/%m/%Y %H:%M') }}
+                                </small>
+                            </div>
+                            <div class="col-sm-6">
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar-edit me-1"></i>
+                                    Modificato: {{ task.updated_at.strftime('%d/%m/%Y %H:%M') }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-save me-2"></i>Salva Modifiche
+                        </button>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Annulla
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Auto-focus sul campo titolo
+document.getElementById('title').focus();
+
+// Auto-resize textarea
+const textarea = document.getElementById('description');
+textarea.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = this.scrollHeight + 'px';
+});
+
+// Trigger resize on load
+textarea.dispatchEvent(new Event('input'));
+</script>
+{% endblock %}
